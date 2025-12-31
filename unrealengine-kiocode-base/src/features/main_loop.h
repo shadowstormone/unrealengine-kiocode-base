@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <vector>
 #include <Windows.h>
@@ -24,6 +24,7 @@ public:
 	void FetchFromPlayers(std::vector<SDK::ACharacter*>* list);
 	void Update(DWORD tick);
 	bool UpdateSDK(bool log);
+	void UpdateMonstersCache();
 
 private:
 

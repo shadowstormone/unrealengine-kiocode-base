@@ -1,4 +1,4 @@
-#include "modmenu.h"
+﻿#include "modmenu.h"
 
 #include "../includes.h"
 #include "../config.h"
@@ -88,6 +88,13 @@ void ModMenu::Window() {
 					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Fill the players box");
 				}
 				
+				{ // Players Corner Box
+					ImGui::Checkbox("Players Corner Box", &Config::m_bPlayersCornerBox);
+					ImGui::SameLine();
+					ImGui::ColorEdit3("##PlayersCornerBoxColor", (float*)&Config::m_cPlayersCornerBoxColor, ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_NoInputs);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Color of the players corner box");
+				}
+
 				{ // Players Box 3D
 					ImGui::Checkbox("Players Box 3D", &Config::m_bPlayersBox3D);
 				}
@@ -174,6 +181,7 @@ void ModMenu::Window() {
 
 				{ // GodMode
 					ImGui::Checkbox("GodMode", &Config::m_bGodMode);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Good mode inf health");
 				}
 				
 				{ // NoClip
@@ -188,6 +196,58 @@ void ModMenu::Window() {
 					ImGui::Checkbox("NoGravity", &Config::m_bNoGravity);
 				}
 
+				{ // Infinite Stamina
+					ImGui::Checkbox("Infinite Stamina", &Config::m_bInfiniteStamina);
+				}
+
+				{ // Infinite Special Ammo
+					ImGui::Checkbox("Infinite Special Ammo", &Config::m_bInfiniteSpecialAmmo);
+				}
+
+				{ // Infinite Long Gun Ammo
+					ImGui::Checkbox("Infinite Long Gun Ammo", &Config::m_bInfiniteLongGunAmmo);
+				}
+
+				{ // Infinite Hand Gun Ammo
+					ImGui::Checkbox("Infinite Hand Gun Ammo", &Config::m_bInfiniteHandGunAmmo);
+				}
+
+				{ // Show Advance Stats
+					ImGui::Checkbox("Show Advance Stats", &Config::m_bShowAdvanceStats);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show advanced stats in the UI");
+				}
+
+				//{ // Instant Reload
+				//ImGui::Checkbox("Instant Reload", &Config::m_bInstantReload);
+				//}
+
+				//{ // No Recoil
+				//	ImGui::Checkbox("No Recoil", &Config::m_bNoRecoil);
+				//}
+
+				//{ // No Spread
+				//	ImGui::Checkbox("No Spread", &Config::m_bNoSpread);
+				//}
+
+				//{ // Rapid Fire
+				//	ImGui::Checkbox("Rapid Fire", &Config::m_bRapidFire);
+				//}
+
+				//{ // No Reload
+				//	ImGui::Checkbox("No Reload", &Config::m_bNoReload);
+				//}
+
+				//{ // One Hit Kill
+				//	ImGui::Checkbox("One Hit Kill", &Config::OneShot);
+				//}
+
+				{ // Speed Hack
+					ImGui::Checkbox("Speed Hack", &Config::m_bSpeedHack);
+					ImGui::Text("Speed Value");
+					ImGui::SameLine();
+					ImGui::SliderFloat("##Speed", &Config::m_fSpeedValue, 0.1f, 10000.0f);
+				}
+
 				{ // Time Scale
 					ImGui::Checkbox("Time Dilation", &Config::m_bTimeScaleChanger);
 					ImGui::Text("Time Dilation Value");
@@ -196,38 +256,6 @@ void ModMenu::Window() {
 					if (ImGui::Button("Reset Time Dilation")) {
 						Config::m_fTimeScale = 1.0f;
 					}
-				}
-
-				/* 
-				{ // No Recoil
-					ImGui::Checkbox("No Recoil", &Config::NoRecoil);
-				}
-
-				{ // No Spread
-					ImGui::Checkbox("No Spread", &Config::NoSpread);
-				}
-
-				{ // One Hit Kill
-					ImGui::Checkbox("One Hit Kill", &Config::OneShot);
-				}
-
-				{ // Rapid Fire
-					ImGui::Checkbox("Rapid Fire", &Config::RapidFire);
-				}
-
-				{ // Infinite Ammo
-					ImGui::Checkbox("Infinite Ammo", &Config::InfiniteAmmo);
-				}*/
-
-				{ //Infinite kill all
-					ImGui::Checkbox("Infinite kill all", &Config::m_bKillAll);
-				}
-
-				{ // Speed Hack
-					ImGui::Checkbox("Speed Hack", &Config::m_bSpeedHack);
-					ImGui::Text("Speed Value");
-					ImGui::SameLine();
-					ImGui::SliderFloat("##Speed", &Config::m_fSpeedValue, 0.1f, 10000.0f);
 				}
 				break;
 			}

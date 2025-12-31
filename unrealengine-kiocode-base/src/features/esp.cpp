@@ -1,7 +1,8 @@
-#include "esp.h"
+﻿#include "esp.h"
 
 #include "../config.h"
 #include "../utils/validity.h"
+#include <algorithm>
 
 void ESP::RenderSkeleton(SDK::ACharacter* pawn, ImColor color)
 {
@@ -193,4 +194,73 @@ void ESP::Render3DBox(SDK::ACharacter* pawn, ImColor color)
 	}
 }
 
+void ESP::RenderCornerBox(SDK::ACharacter* pawn, ImColor color)
+{
+	if (!pawn || !Config::m_pMyController || Validity::IsBadPoint(Config::m_pMyController) || Config::m_BonePairs.empty())
+		return;
 
+	SDK::USkeletalMeshComponent* mesh = pawn->Mesh;
+	if (!mesh)
+		return;
+
+	SDK::FVector head = mesh->GetSocketLocation(
+		mesh->GetBoneName(Config::m_BonePairs[10].second)
+	);
+
+	SDK::FVector feet = mesh->GetSocketLocation(
+		mesh->GetBoneName(Config::m_BonePairs.back().second)
+	);
+
+	SDK::FVector2D headScreen, feetScreen;
+
+	if (
+		!Config::m_pMyController->ProjectWorldLocationToScreen(head, &headScreen, false) ||
+		!Config::m_pMyController->ProjectWorldLocationToScreen(feet, &feetScreen, false)
+		)
+		return;
+
+	float height = feetScreen.Y - headScreen.Y;
+	if (height <= 0.0f)
+		return;
+
+	float width = height / 2.0f;
+	float corner = width * 0.25f;
+
+	ImDrawList* draw = ImGui::GetForegroundDrawList();
+
+	float left = headScreen.X - width;
+	float right = headScreen.X + width;
+	float top = headScreen.Y;
+	float bottom = feetScreen.Y;
+
+	// Alpha for filled corner background (optional)
+	if (Config::m_bPlayersBoxFilled)
+	{
+		ImColor fill = color;
+		fill.Value.w = 0.15f;
+
+		draw->AddRectFilled(
+			ImVec2(left, top),
+			ImVec2(right, bottom),
+			fill
+		);
+	}
+
+	color.Value.w = 1.0f;
+
+	// ===== TOP LEFT =====
+	draw->AddLine(ImVec2(left, top), ImVec2(left + corner, top), color, 1.0f);
+	draw->AddLine(ImVec2(left, top), ImVec2(left, top + corner), color, 1.0f);
+
+	// ===== TOP RIGHT =====
+	draw->AddLine(ImVec2(right, top), ImVec2(right - corner, top), color, 1.0f);
+	draw->AddLine(ImVec2(right, top), ImVec2(right, top + corner), color, 1.0f);
+
+	// ===== BOTTOM LEFT =====
+	draw->AddLine(ImVec2(left, bottom), ImVec2(left + corner, bottom), color, 1.0f);
+	draw->AddLine(ImVec2(left, bottom), ImVec2(left, bottom - corner), color, 1.0f);
+
+	// ===== BOTTOM RIGHT =====
+	draw->AddLine(ImVec2(right, bottom), ImVec2(right - corner, bottom), color, 1.0f);
+	draw->AddLine(ImVec2(right, bottom), ImVec2(right, bottom - corner), color, 1.0f);
+}

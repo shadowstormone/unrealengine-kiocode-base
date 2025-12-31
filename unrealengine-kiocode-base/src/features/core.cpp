@@ -1,4 +1,4 @@
-#include "core.h"
+﻿#include "core.h"
 
 #include <iostream>
 #include <Windows.h>
@@ -178,6 +178,4 @@ HRESULT __stdcall GUI::hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, 
 
 	return oPresent(pSwapChain, SyncInterval, Flags);
 	#pragma endregion
-
 }
-

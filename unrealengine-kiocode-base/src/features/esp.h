@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../includes.h"
 
@@ -14,6 +14,7 @@ public:
 	void RenderSnapline(SDK::ACharacter* pawn, ImColor color);
 	void RenderBox(SDK::ACharacter* pawn, ImColor color);
 	void Render3DBox(SDK::ACharacter* pawn, ImColor color);
+	void RenderCornerBox(SDK::ACharacter* pawn, ImColor color);
 
 private:
 

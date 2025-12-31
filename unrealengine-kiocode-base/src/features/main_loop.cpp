@@ -1,4 +1,4 @@
-#include "main_loop.h"
+﻿#include "main_loop.h"
 
 #include "../config.h"
 #include "../utils/validity.h"
@@ -6,6 +6,10 @@
 #include "../utils/imgui/imgui_helper.h"
 #include "esp.h"
 #include "aimbot.h"
+
+#include <set>
+#include <cstdio>
+#include <fstream>
 
 void MainLoop::DrawCrosshair() 
 {
@@ -22,76 +26,173 @@ void MainLoop::DrawCrosshair()
 	}
 }
 
-void MainLoop::FetchFromObjects(std::vector<SDK::ACharacter*>* list)
+//void MainLoop::FetchFromObjects(std::vector<SDK::ACharacter*>* list)
+//{
+//
+//	list->clear();
+//
+//	for (int i = 0; i < SDK::UObject::GObjects->Num(); i++)
+//	{
+//		SDK::UObject* obj = SDK::UObject::GObjects->GetByIndex(i);
+//
+//		if (!obj || obj->IsDefaultObject())
+//			continue;
+//				
+//		// THIS PART CAN BE VARIABLE BELOW
+//
+//		// Crabs Champions
+//		//if (!obj->IsA(SDK::ACrabEnemyC::StaticClass()))
+//		//	continue;
+//		
+//		// Destroy All Humans
+//		//if (!obj->IsA(SDK::UBFGAnimationInstance_Human::StaticClass()))
+//		//	continue;		
+//		
+//		// oar
+//		/*if (!obj->IsA(SDK::ANPCBase_C::StaticClass()))
+//			continue;
+//
+//		SDK::ANPCBase_C* npc = static_cast<SDK::ANPCBase_C*>(obj);
+//
+//		if (!npc || Validity::IsBadPoint(npc) || npc->Health <= 0 || npc->Dead_)
+//			continue;*/
+//
+//		//if(Config::m_bKillAll) npc->TakeDamage(999, npc);
+//
+//		//list->push_back(npc);
+//
+//	}
+//}
+
+//void MainLoop::FetchFromObjects(std::vector<SDK::ACharacter*>* list)
+//{
+//	if (!list) return;
+//	list->clear();
+//
+//	for (int i = 0; i < SDK::UObject::GObjects->Num(); i++)
+//	{
+//		SDK::UObject* obj = SDK::UObject::GObjects->GetByIndex(i);
+//		if (!obj || obj->IsDefaultObject())
+//			continue;
+//
+//		// Ищем только монстров
+//		if (!obj->IsA(SDK::ABP_Monster_C::StaticClass()))
+//			continue;
+//
+//		SDK::ABP_Monster_C* monster = static_cast<SDK::ABP_Monster_C*>(obj);
+//		if (!monster || !monster->RootComponent)
+//			continue;
+//
+//		list->push_back(monster);
+//	}
+//}
+
+// Глобальный кеш врагов с временем обновления
+static std::vector<SDK::ABP_Monster_C*> g_CachedMonsters;
+static double g_LastUpdateTime = 0.0;
+static const double UPDATE_INTERVAL = 0.5; // Обновлять каждые 0.5 секунды
+
+void MainLoop::UpdateMonstersCache()
 {
+	// Обновляем кеш врагов только с интервалом, не каждый кадр
+	double currentTime = GetCurrentTime();
+	if (currentTime - g_LastUpdateTime < UPDATE_INTERVAL)
+		return;
 
-	list->clear();
+	g_LastUpdateTime = currentTime;
+	g_CachedMonsters.clear();
 
-	for (int i = 0; i < SDK::UObject::GObjects->Num(); i++)
+	if (!Config::m_pWorld || Config::m_pWorld->Levels.Num() == 0)
+		return;
+
+	// Итерируем по ВСЕ уровнем (враги могут быть в разных уровнях)
+	for (int l = 0; l < Config::m_pWorld->Levels.Num(); l++)
 	{
-		SDK::UObject* obj = SDK::UObject::GObjects->GetByIndex(i);
-
-		if (!obj || obj->IsDefaultObject())
-			continue;
-				
-		// THIS PART CAN BE VARIABLE BELOW
-
-		// Crabs Champions
-		//if (!obj->IsA(SDK::ACrabEnemyC::StaticClass()))
-		//	continue;
-		
-		// Destroy All Humans
-		//if (!obj->IsA(SDK::UBFGAnimationInstance_Human::StaticClass()))
-		//	continue;		
-		
-		// oar
-		/*if (!obj->IsA(SDK::ANPCBase_C::StaticClass()))
+		SDK::ULevel* currLevel = Config::m_pWorld->Levels[l];
+		if (!currLevel)
 			continue;
 
-		SDK::ANPCBase_C* npc = static_cast<SDK::ANPCBase_C*>(obj);
+		// Итерируем по Actors в каждом уровне
+		for (int j = 0; j < currLevel->Actors.Num(); j++)
+		{
+			SDK::AActor* actor = currLevel->Actors[j];
+			if (!actor || !actor->RootComponent)
+				continue;
 
-		if (!npc || Validity::IsBadPoint(npc) || npc->Health <= 0 || npc->Dead_)
-			continue;*/
+			if (!actor->IsA(SDK::ABP_Monster_C::StaticClass()))
+				continue;
 
-		//if(Config::m_bKillAll) npc->TakeDamage(999, npc);
-
-		//list->push_back(npc);
-
+			SDK::ABP_Monster_C* monster = static_cast<SDK::ABP_Monster_C*>(actor);
+			if (monster)
+			{
+				g_CachedMonsters.push_back(monster);
+			}
+		}
 	}
 }
 
-/*void MainLoop::FetchFromActors(std::vector<SDK::AActor*>* list)
+void MainLoop::FetchFromObjects(std::vector<SDK::ACharacter*>* list)
 {
+	if (!list) return;
 
-	if (Config::World->Levels.Num() == 0)
+	UpdateMonstersCache();
+
+	// Копируем кеш вместо пересканирования GObjects
+	list->clear();
+
+	for (const auto& monster : g_CachedMonsters)
+	{
+		if (monster && monster->RootComponent)
+		{
+			list->push_back(monster);
+		}
+	}
+}
+
+void MainLoop::FetchFromActors(std::vector<SDK::AActor*>* list)
+{
+	if (Config::m_pWorld->Levels.Num() == 0)
 		return;
-
-	SDK::ULevel* currLevel = Config::World->Levels[0];
+	SDK::ULevel* currLevel = Config::m_pWorld->Levels[0];
 	if (!currLevel)
 		return;
-
 	list->clear();
+
+	std::set<std::string> uniqueActors;
 
 	for (int j = 0; j < currLevel->Actors.Num(); j++)
 	{
 		SDK::AActor* currActor = currLevel->Actors[j];
+
+		// Сохраняем названия акторов до всех проверок
+		if (currActor)
+			uniqueActors.insert(currActor->GetFullName());
 
 		if (!currActor)
 			continue;
 		if (!currActor->RootComponent)
 			continue;
 
-		//const auto location = currActor->K2_GetActorLocation();
-		//if (location.X == 0.f || location.Y == 0.f || location.Z == 0.f) continue;
-
-		//if (currActor->GetFullName().find("YOUR_NPC") != std::string::npos)
-		if (currActor->GetFullName().find("BP_Enemy") != std::string::npos)
+		std::string fullName = currActor->GetFullName();
+		// Ищем врагов (Character_*), исключаем игрока
+		if (fullName.find("Character_") != std::string::npos &&
+			fullName.find("Character_Master_Player") == std::string::npos)
 		{
 			list->push_back(currActor);
 		}
-
 	}
-}*/
+
+	// Сохраняем уникальные актеры в файл
+	std::ofstream file("actor_name.list");
+	if (file.is_open())
+	{
+		for (const auto& actorName : uniqueActors)
+		{
+			file << actorName << '\n';
+		}
+		file.close();
+	}
+}
 
 void MainLoop::FetchFromPlayers(std::vector<SDK::ACharacter*>* list)
 {
@@ -165,26 +266,26 @@ void MainLoop::FetchEntities()
 			}
 		}
 
-		std::vector<SDK::ACharacter*> newTargets;
+		std::vector<SDK::ACharacter*> ACharNewTargets;
 
 		switch (Config::m_nTargetFetch)
 		{
 			case 0:
-				FetchFromObjects(&newTargets);
+				FetchFromObjects(&ACharNewTargets);
 				break;
 
 			case 1:
-				//FetchFromActors(&newTargets);
+				//FetchFromActors(&AActorNewTargets);
 				break;
 
 			case 2:
-				FetchFromPlayers(&newTargets);
+				FetchFromPlayers(&ACharNewTargets);
 				break;
 		}
 
 		{
 			std::lock_guard<std::mutex> lock(list_mutex);
-			Config::m_TargetsList = std::move(newTargets);
+			Config::m_TargetsList = std::move(ACharNewTargets);
 		}
 
 		if (Config::System::m_bUpdateTargetsInDifferentThread)
@@ -261,7 +362,6 @@ bool MainLoop::UpdateSDK(bool log)
 	}
 
 	return true;
-
 }
 
 void MainLoop::Update(DWORD tick) 
@@ -281,9 +381,194 @@ void MainLoop::Update(DWORD tick)
 
 	if (Config::m_bGodMode)
 	{
-		// not working in all games
-		Config::m_pMyController->SetLifeSpan(999);
+		// Cast to the Remnant character type and call GodMode function
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter))
+			{
+				PlayerCharacter->God_Mode = true;
+			}
+		}
 	}
+	else
+	{
+		// Disable godmode when the checkbox is unchecked
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter))
+			{
+				PlayerCharacter->God_Mode = false;
+			}
+		}
+	}
+
+	if (Config::m_bInfiniteStamina)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->Stamina)
+			{
+				PlayerCharacter->Stamina->Value = 99999.f;
+			}
+		}
+	}
+
+	if (Config::m_bInfiniteSpecialAmmo)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->SpecialAmmo)
+			{
+				PlayerCharacter->SpecialAmmo->Value = 200.f;
+			}
+		}
+	}
+
+	if (Config::m_bInfiniteLongGunAmmo)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->LongGunAmmo)
+			{
+				PlayerCharacter->LongGunAmmo->Value = 200.f;
+			}
+		}
+	}
+
+	if (Config::m_bInfiniteHandGunAmmo)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->HandGunAmmo)
+			{
+				PlayerCharacter->HandGunAmmo->Value = 200.f;
+			}
+		}
+	}
+
+	if (Config::m_bShowAdvanceStats)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter))
+			{
+				PlayerCharacter->ShowAdvanceStats = true;
+			}
+		}
+	}
+	else
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter))
+			{
+				PlayerCharacter->ShowAdvanceStats = false;
+			}
+		}
+	}
+
+	/* ==================== Weapon Hack ==================== */
+
+	/*
+	if (Config::m_bInstantReload)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				CurrentWeapon->ReloadSpeed = 9999.0f;
+			}
+		}
+	}
+
+	if (Config::m_bNoSpread)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				CurrentWeapon->ApplySpread(-1.0f);
+			}
+		}
+	}
+
+	if (Config::m_bNoRecoil)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				CurrentWeapon->ApplyRecoil(-1.0f);
+			}
+		}
+	}
+
+	if (Config::m_bNoReload)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				CurrentWeapon->FillClip(99);
+				CurrentWeapon->ConsumeAmmo(99);
+			}
+		}
+	}
+	
+	if (Config::m_bRapidFire)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				auto& Mode = CurrentWeapon->OverrideWeaponMode;
+				Mode.RateOfFire = 9999.0f;
+				Mode.BurstRateOfFire = 9999.0f;
+			}
+		}
+	}*/
+
+	/* ==================== Weapon Hack ==================== */
+
+	/*if (Config::)
+	{
+		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		{
+			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
+			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			{
+				CurrentWeapon->
+			}
+		}
+	}*/
+
+
+	//if (Config::m_bShowAdvanceStats)
+	//{
+	//	if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+	//	{
+	//		SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+	//		if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->HandGunAmmo)
+	//		{
+	//			SDK::FAttribute playerStats = PlayerCharacter->Attributes->GetAttributeByID("health");
+	//			PlayerCharacter->Attributes->Attributes
+	//		}
+	//	}
+	//}
+
 
 	// seems universal (use it with the fly or you will fall under the map forever :D)
 	if (Config::m_bNoClip)
@@ -449,6 +734,29 @@ void MainLoop::Update(DWORD tick)
 			}
 
 			ESP::GetInstance().RenderBox(currTarget, color);
+		}
+
+		if (Config::m_bPlayersCornerBox)
+		{
+			ImColor color;
+
+			if (currTarget == Config::m_pCurrentTarget)
+			{
+				color = Config::m_bRainbowAimbotTargetColor ? Config::m_cRainbow : Config::m_cAimbotTargetColor;
+			}
+			else
+			{
+				if (isVisible)
+				{
+					color = Config::m_cPlayersCornerBoxColor;
+				}
+				else
+				{
+					color = Config::m_bRainbowTargetNotVisibleColor ? Config::m_cRainbow : Config::m_cTargetNotVisibleColor;
+				}
+			}
+
+			ESP::GetInstance().RenderCornerBox(currTarget, color);
 		}
 
 		if (Config::m_bPlayersBox3D)

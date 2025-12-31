@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../includes.h"
 
@@ -12,6 +12,7 @@ public:
 	void RegularAimbot(SDK::ACharacter* pawn);
 
 private:
+	void DebugPrintBonePairs(SDK::ACharacter* pawn);
 	Aimbot() = default;
 	~Aimbot() = default;
 
