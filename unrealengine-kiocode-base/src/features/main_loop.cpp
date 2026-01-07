@@ -475,71 +475,230 @@ void MainLoop::Update(DWORD tick)
 		}
 	}
 
-	/* ==================== Weapon Hack ==================== */
-
-	/*
-	if (Config::m_bInstantReload)
-	{
-		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
-		{
-			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
-			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
-			{
-				CurrentWeapon->ReloadSpeed = 9999.0f;
-			}
-		}
-	}
-
 	if (Config::m_bNoSpread)
 	{
-		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
 		{
-			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
-			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
 			{
-				CurrentWeapon->ApplySpread(-1.0f);
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				// Проверяем, что это дальнобойное оружие
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon->Profile)
+					continue;
+
+				// Получаем объект профиля через ClassDefaultObject
+				SDK::URangedWeaponProfile* profile = static_cast<SDK::URangedWeaponProfile*>(rangedWeapon->Profile->ClassDefaultObject);
+				if (!profile)
+					continue;
+
+				profile->FiringSpreadIncrement = 0.f;
+				profile->InitialFiringSpread = 0.f;
+				profile->FiringSpreadDecay = 0.f;
+				profile->FiringSpreadDecayDelay = 0.f;
+				profile->FiringSpreadMin = 0.f;
+				profile->FiringSpreadMax = 0.f;
+				profile->FiringSpreadMoveRef = 0.f;
+				profile->FiringSpreadAimMin = 0.f;
+				profile->FiringSpreadAimMax = 0.f;
+
+				profile->CameraShake = nullptr;
+				profile->CameraShakeAimScale = 0.f;
+				profile->CameraShakeScale = 0.f;
+				profile->CameraShakeScopeScale = 0.f;
+
+				rangedWeapon->CustomSpread = {};
+				rangedWeapon->ApplySpread(0.f);
 			}
 		}
 	}
 
 	if (Config::m_bNoRecoil)
 	{
-		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
 		{
-			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
-			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
 			{
-				CurrentWeapon->ApplyRecoil(-1.0f);
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				// Проверяем, что это дальнобойное оружие
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon->Profile)
+					continue;
+
+				// Получаем объект профиля через ClassDefaultObject
+				SDK::URangedWeaponProfile* profile = static_cast<SDK::URangedWeaponProfile*>(rangedWeapon->Profile->ClassDefaultObject);
+				if (!profile)
+					continue;
+
+				profile->RecoilHorizontalMin = 0.f;
+				profile->RecoilHorizontalMax = 0.f;
+				profile->RecoilVertical = 0.f;
+				profile->RecoilSpeed = 0.f;
+				profile->RecoilRecover = 0.f;
+				profile->RecoilRecoverTime = 0.f;
+				profile->RecoilHorizontalScopeScale = 0.f;
+				profile->RecoilVerticalScopeScale = 0.f;
+				profile->RecoilSpeedScopeScale = 0.f;
+
+				profile->CameraShake = nullptr;
+				profile->CameraShakeAimScale = 0.f;
+				profile->CameraShakeScale = 0.f;
+				profile->CameraShakeScopeScale = 0.f;
+
+				rangedWeapon->ApplyRecoil(0.f);
 			}
 		}
 	}
 
 	if (Config::m_bNoReload)
 	{
-		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
 		{
-			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
-			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
 			{
-				CurrentWeapon->FillClip(99);
-				CurrentWeapon->ConsumeAmmo(99);
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon->Profile)
+					continue;
+
+				// Проверяем InstanceData
+				SDK::UItemInstanceData* baseData = item->InstanceData;
+				if (!baseData || Validity::IsBadPoint(baseData))
+					continue;
+
+				// Cast к URangedWeaponInstanceData
+				SDK::URangedWeaponInstanceData* weaponData = static_cast<SDK::URangedWeaponInstanceData*>(baseData);
+				if (!weaponData || Validity::IsBadPoint(weaponData))
+					continue;
+
+				// Заполняем обойму полностью (AmmoInClip = максимум на клип)
+				weaponData->AmmoInClip = rangedWeapon->GetAmmoPerClip();
 			}
 		}
 	}
-	
-	if (Config::m_bRapidFire)
+
+	if (Config::m_bAutoFire)
 	{
-		if (Config::m_pMyWeapon && !Validity::IsBadPoint(Config::m_pMyWeapon))
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
 		{
-			SDK::ARangedWeapon* CurrentWeapon = static_cast<SDK::ARangedWeapon*>(Config::m_pMyWeapon);
-			if (CurrentWeapon && !Validity::IsBadPoint(CurrentWeapon))
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
 			{
-				auto& Mode = CurrentWeapon->OverrideWeaponMode;
-				Mode.RateOfFire = 9999.0f;
-				Mode.BurstRateOfFire = 9999.0f;
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon)
+					continue;
+
+				 SDK::FRangedWeaponMode& defaultMode = rangedWeapon->DefaultWeaponMode;
+				 defaultMode.BurstCount = 0.0f;
 			}
 		}
-	}*/
+	}
+
+	if (Config::m_bRapidFire)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
+			{
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon)
+					continue;
+
+				SDK::FRangedWeaponMode& defaultMode = rangedWeapon->DefaultWeaponMode;
+				defaultMode.RateOfFire = Config::m_fRapidSpeedValue;
+				defaultMode.BurstRateOfFire = Config::m_fRapidSpeedValue;
+			}
+		}
+	}
+
+	if (Config::m_bInstantReload)
+	{
+		if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
+		{
+			auto* pc = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
+			auto* inventory = pc->Inventory;
+			if (!inventory)
+				return;
+
+			for (int i = 0; i < inventory->EquipmentSlots.Num(); ++i)
+			{
+				const SDK::FEquipmentSlot& slot = inventory->EquipmentSlots[i];
+				SDK::AEquipment* item = inventory->GetEquippedItemBySlotName(slot.NameID);
+				if (!item || Validity::IsBadPoint(item))
+					continue;
+
+				if (!item->IsA(SDK::ARangedWeapon::StaticClass()))
+					continue;
+
+				SDK::ARangedWeapon* rangedWeapon = static_cast<SDK::ARangedWeapon*>(item);
+				if (!rangedWeapon)
+					continue;
+
+				rangedWeapon->ReloadSpeed = 9999.0f;
+			}
+		}
+	}
 
 	/* ==================== Weapon Hack ==================== */
 
@@ -555,30 +714,15 @@ void MainLoop::Update(DWORD tick)
 		}
 	}*/
 
-
-	//if (Config::m_bShowAdvanceStats)
-	//{
-	//	if (Config::m_pMyCharacter && !Validity::IsBadPoint(Config::m_pMyCharacter))
-	//	{
-	//		SDK::ACharacter_Master_Player_C* PlayerCharacter = static_cast<SDK::ACharacter_Master_Player_C*>(Config::m_pMyCharacter);
-	//		if (PlayerCharacter && !Validity::IsBadPoint(PlayerCharacter) && PlayerCharacter->HandGunAmmo)
-	//		{
-	//			SDK::FAttribute playerStats = PlayerCharacter->Attributes->GetAttributeByID("health");
-	//			PlayerCharacter->Attributes->Attributes
-	//		}
-	//	}
-	//}
-
-
 	// seems universal (use it with the fly or you will fall under the map forever :D)
-	if (Config::m_bNoClip)
-	{
-		Config::m_pMyPawn->SetActorEnableCollision(false);
-	}
-	else if (!Config::m_bNoClip && Config::m_pMyPawn->GetActorEnableCollision())
-	{
-		Config::m_pMyPawn->SetActorEnableCollision(true);
-	}
+	//if (Config::m_bNoClip)
+	//{
+	//	Config::m_pMyPawn->SetActorEnableCollision(false);
+	//}
+	//else if (!Config::m_bNoClip && Config::m_pMyPawn->GetActorEnableCollision())
+	//{
+	//	Config::m_pMyPawn->SetActorEnableCollision(true);
+	//}
 
 	// seems universal
 	if (Config::m_bCameraFovChanger)
@@ -593,35 +737,35 @@ void MainLoop::Update(DWORD tick)
 	}
 
 	// seems universal (in multiplayer it may not work if player pos is server sided)
-	if (Config::m_bFly)
-	{
-		Config::m_pMyCharacter->CharacterMovement->MaxFlySpeed = 20000.f;
-		Config::m_pMyCharacter->CharacterMovement->MovementMode = SDK::EMovementMode::MOVE_Flying;
-		if (GetAsyncKeyState(VK_SPACE))
-		{
-			SDK::FVector posUP = { 0.f, 0.f, 10.f };
-			Config::m_pMyCharacter->CharacterMovement->AddInputVector(posUP, true);
-		}
-		if (GetAsyncKeyState(VK_LCONTROL))
-		{
-			SDK::FVector posDOWN = { 0.f, 0.f, -10.f };
-			Config::m_pMyCharacter->CharacterMovement->AddInputVector(posDOWN, true);
-		}
-	}
-	else if (Config::m_pMyCharacter->CharacterMovement->MovementMode == SDK::EMovementMode::MOVE_Flying)
-	{
-		Config::m_pMyCharacter->CharacterMovement->MovementMode = SDK::EMovementMode::MOVE_Falling;
-	}
+	//if (Config::m_bFly)
+	//{
+	//	Config::m_pMyCharacter->CharacterMovement->MaxFlySpeed = 20000.f;
+	//	Config::m_pMyCharacter->CharacterMovement->MovementMode = SDK::EMovementMode::MOVE_Flying;
+	//	if (GetAsyncKeyState(VK_SPACE))
+	//	{
+	//		SDK::FVector posUP = { 0.f, 0.f, 10.f };
+	//		Config::m_pMyCharacter->CharacterMovement->AddInputVector(posUP, true);
+	//	}
+	//	if (GetAsyncKeyState(VK_LCONTROL))
+	//	{
+	//		SDK::FVector posDOWN = { 0.f, 0.f, -10.f };
+	//		Config::m_pMyCharacter->CharacterMovement->AddInputVector(posDOWN, true);
+	//	}
+	//}
+	//else if (Config::m_pMyCharacter->CharacterMovement->MovementMode == SDK::EMovementMode::MOVE_Flying)
+	//{
+	//	Config::m_pMyCharacter->CharacterMovement->MovementMode = SDK::EMovementMode::MOVE_Falling;
+	//}
 
-	// seems universal
-	if (Config::m_bNoGravity)
-	{
-		Config::m_pMyCharacter->CharacterMovement->GravityScale = 0.2f;
-	}
-	else if (Config::m_pMyCharacter->CharacterMovement->GravityScale != 1.f)
-	{
-		Config::m_pMyCharacter->CharacterMovement->GravityScale = 1.f;
-	}
+	//// seems universal
+	//if (Config::m_bNoGravity)
+	//{
+	//	Config::m_pMyCharacter->CharacterMovement->GravityScale = 0.2f;
+	//}
+	//else if (Config::m_pMyCharacter->CharacterMovement->GravityScale != 1.f)
+	//{
+	//	Config::m_pMyCharacter->CharacterMovement->GravityScale = 1.f;
+	//}
 
 	// seems universal
 	if (Config::m_bSpeedHack)

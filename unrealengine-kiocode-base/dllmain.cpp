@@ -1,4 +1,4 @@
-#ifndef TEST_MODE
+﻿#ifndef TEST_MODE
 
 #include <thread>
 
@@ -10,6 +10,7 @@
 #include "src/config.h"
 #include "src/features/main_loop.h"
 
+HMODULE g_hModule = nullptr;
 
 void StartBackgroundThreads()
 {
@@ -60,6 +61,7 @@ BOOL WINAPI DllMain(HMODULE hMod, DWORD dwReason, LPVOID lpReserved)
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hMod);
 		CreateThread(nullptr, 0, MainThread, hMod, 0, nullptr);
+		g_hModule = hMod;
 		break;
 	case DLL_PROCESS_DETACH:
 		kiero::shutdown();

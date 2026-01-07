@@ -31,7 +31,7 @@
 //#include "SDK/AnimGraphRuntime_structs.hpp"
 //#include "SDK/SlateCore_structs.hpp"
 //#include "SDK/GunfireSaveSystem_structs.hpp"
-//#include "SDK/GunfireRuntime_structs.hpp"
+#include "SDK/GunfireRuntime_structs.hpp"
 //#include "SDK/UMG_structs.hpp"
 //#include "SDK/Widget_Crafting_classes.hpp"
 //#include "SDK/OnlineSubsystemSteam_classes.hpp"

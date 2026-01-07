@@ -11,8 +11,8 @@ public:
 	class System
 	{
 	public:
-		inline static constexpr const char* m_cAppName = "UnrealBase";
-		inline static constexpr const char* m_cAuthor = "@kiocode";
+		inline static constexpr const char* m_cAppName = "RemnantHack";
+		inline static constexpr const char* m_cAuthor = "@Remnant From the Ashes Hack";
 
 		inline static bool m_bInit = false;
 		inline static bool m_bUpdateTargetsInDifferentThread = false; // some game is freezing if true
@@ -111,9 +111,9 @@ public:
 	inline static ImColor m_cMouseColor = ImColor(255.0f / 255, 255.0f / 255, 255.0f / 255);
 	inline static int m_nMouseType = 0;
 
-	inline static bool m_bFly = false;
+	//inline static bool m_bFly = false;
 
-	inline static bool m_bNoGravity = false;
+	//inline static bool m_bNoGravity = false;
 
 	inline static bool m_bCrosshair = false;
 	inline static bool m_bRainbowCrosshair = false;
@@ -166,7 +166,7 @@ public:
 	inline static bool m_bSpeedHack = false;
 	inline static float m_fSpeedValue = 1.0f;
 
-	inline static bool m_bNoClip = false;
+	//inline static bool m_bNoClip = false;
 
 	inline static bool m_bEnableAimbot = false;
 	inline static bool m_bAimbotFOVCheck = false;
@@ -189,9 +189,13 @@ public:
 
 
 	//Weapon Exploits
-	//inline static bool m_bInstantReload = false;
-	//inline static bool m_bNoSpread = false;
-	//inline static bool m_bNoRecoil = false;
-	//inline static bool m_bNoReload = false;
-	//inline static bool m_bRapidFire = false;
+	inline static bool m_bAutoFire = false;
+	inline static bool m_bNoSpread = false;
+	inline static bool m_bNoRecoil = false;
+	inline static bool m_bNoReload = false;
+
+	inline static bool m_bRapidFire = false;
+	inline static float m_fRapidSpeedValue = 5.0f;
+
+	inline static bool m_bInstantReload = false;
 };

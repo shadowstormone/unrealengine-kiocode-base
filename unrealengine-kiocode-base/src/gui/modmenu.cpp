@@ -6,9 +6,9 @@
 //#include "../lua/lua.h"
 #include "core/themes.h"
 
-void ModMenu::Window() {
-
-	Themes::ImGuiThemeKio();
+void ModMenu::Window()
+{
+	Themes::SetAdvancedPurpleDarkStyle();
 
 	//if (LuaEditor::GetInstance().ShowEditor) {
 	//	LuaEditor::GetInstance().RenderLuaEditor();
@@ -17,7 +17,7 @@ void ModMenu::Window() {
 	if (ImGui::Begin(Config::System::m_cAuthor, nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
 	{
 		ImGui::SetWindowPos(ImVec2(500, 500), ImGuiCond_Once);
-		ImGui::SetWindowSize(ImVec2(600, 300), ImGuiCond_Once);
+		ImGui::SetWindowSize(ImVec2(900, 500), ImGuiCond_Once);
 		static Config::MenuTab tabIndex = Config::TAB_VISUALS;
 		ImGui::SameLine();
 		if (ImGui::Button("Visual"))
@@ -184,32 +184,44 @@ void ModMenu::Window() {
 					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Good mode inf health");
 				}
 				
-				{ // NoClip
-					ImGui::Checkbox("NoClip", &Config::m_bNoClip);
-				}
-				
-				{ // Fly
-					ImGui::Checkbox("Fly", &Config::m_bFly);
-				}
-				
-				{ // NoGravity
-					ImGui::Checkbox("NoGravity", &Config::m_bNoGravity);
-				}
-
 				{ // Infinite Stamina
 					ImGui::Checkbox("Infinite Stamina", &Config::m_bInfiniteStamina);
 				}
 
-				{ // Infinite Special Ammo
-					ImGui::Checkbox("Infinite Special Ammo", &Config::m_bInfiniteSpecialAmmo);
+				{ // No Reload
+					ImGui::Checkbox("No Reload", &Config::m_bNoReload);
+				}
+
+				{ // No Recoil
+					ImGui::Checkbox("No Recoil", &Config::m_bNoRecoil);
+				}
+
+				{ // No Spread
+					ImGui::Checkbox("No Spread", &Config::m_bNoSpread);
+				}
+
+				{ // Auto Fire
+					ImGui::Checkbox("Auto Fire", &Config::m_bAutoFire);
+				}
+
+				{ // Instant Reload
+					ImGui::Checkbox("Instant Reload", &Config::m_bInstantReload);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Super fast reload speed");
 				}
 
 				{ // Infinite Long Gun Ammo
 					ImGui::Checkbox("Infinite Long Gun Ammo", &Config::m_bInfiniteLongGunAmmo);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ammo for snipers/automatic rifles");
 				}
 
 				{ // Infinite Hand Gun Ammo
 					ImGui::Checkbox("Infinite Hand Gun Ammo", &Config::m_bInfiniteHandGunAmmo);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ammo for pistols");
+				}
+
+				{ // Infinite Special Ammo
+					ImGui::Checkbox("Infinite Special Ammo", &Config::m_bInfiniteSpecialAmmo);
+					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Special Ammo");
 				}
 
 				{ // Show Advance Stats
@@ -217,28 +229,27 @@ void ModMenu::Window() {
 					if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show advanced stats in the UI");
 				}
 
-				//{ // Instant Reload
-				//ImGui::Checkbox("Instant Reload", &Config::m_bInstantReload);
-				//}
+				{ // Rapid Fire
+					ImGui::Checkbox("Rapid Fire", &Config::m_bRapidFire);
+					ImGui::Text("Fire Speed Value");
+					ImGui::SameLine();
+					float step = 5.0f; // например, шаг 5
+					if (ImGui::SliderFloat("##FireSpeed", &Config::m_fRapidSpeedValue, 1.0f, 100.0f))
+					{
+						Config::m_fRapidSpeedValue = roundf(Config::m_fRapidSpeedValue / step) * step;
+					}
+				}
 
-				//{ // No Recoil
-				//	ImGui::Checkbox("No Recoil", &Config::m_bNoRecoil);
+				//{ // NoClip
+				//	ImGui::Checkbox("NoClip", &Config::m_bNoClip);
 				//}
-
-				//{ // No Spread
-				//	ImGui::Checkbox("No Spread", &Config::m_bNoSpread);
+				
+				//{ // Fly
+				//	ImGui::Checkbox("Fly", &Config::m_bFly);
 				//}
-
-				//{ // Rapid Fire
-				//	ImGui::Checkbox("Rapid Fire", &Config::m_bRapidFire);
-				//}
-
-				//{ // No Reload
-				//	ImGui::Checkbox("No Reload", &Config::m_bNoReload);
-				//}
-
-				//{ // One Hit Kill
-				//	ImGui::Checkbox("One Hit Kill", &Config::OneShot);
+				//
+				//{ // NoGravity
+				//	ImGui::Checkbox("NoGravity", &Config::m_bNoGravity);
 				//}
 
 				{ // Speed Hack
